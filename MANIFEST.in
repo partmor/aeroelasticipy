@@ -2,3 +2,9 @@ include README.rst
 include LICENSE
 
 graft src
+
+prune docs
+prune examples
+prune tests
+
+exclude tox.ini appveyor.yml
