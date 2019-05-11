@@ -1,6 +1,6 @@
 from collections import namedtuple
-import numpy as np
 
+import numpy as np
 
 WingParams = namedtuple('WingParams', 'cr, ct, bp, theta, delta')
 MeshParams = namedtuple('MeshParams', 'm, n')

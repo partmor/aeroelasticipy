@@ -3,7 +3,6 @@ import pytest
 
 import ezaero.vlm.steady as vlm_steady
 
-
 INFINITE_WING = {
     'wing': vlm_steady.WingParams(cr=1.0, ct=1.0, bp=10000, theta=0.0,
                                   delta=0.0),

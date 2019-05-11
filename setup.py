@@ -1,13 +1,7 @@
 from glob import glob
-from os.path import (
-    basename,
-    splitext
-)
-from setuptools import (
-    find_packages,
-    setup
-)
+from os.path import basename, splitext
 
+from setuptools import find_packages, setup
 
 NAME = 'ezaero'
 DESCRIPTION = 'Aerodynamics in Python.'

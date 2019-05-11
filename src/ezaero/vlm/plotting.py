@@ -1,8 +1,7 @@
-import numpy as np
-
 import matplotlib.pyplot as plt
-from matplotlib import cm
 import mpl_toolkits.mplot3d as a3
+import numpy as np
+from matplotlib import cm
 
 
 def plot_panels(x, elev=25, azim=-160, edge_color='k',
