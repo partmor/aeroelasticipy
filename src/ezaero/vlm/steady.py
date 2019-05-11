@@ -193,7 +193,7 @@ def get_wake_wing_influence_matrix(cpoints: np.ndarray, wake: np.ndarray,
 
 
 def get_influence_matrix(vortex_panels: np.ndarray, wake: np.ndarray,
-                          cpoints: np.ndarray, normals: np.ndarray):
+                         cpoints: np.ndarray, normals: np.ndarray):
 
     aic = (
         get_wing_influence_matrix(vortex_panels, cpoints, normals)
@@ -252,7 +252,7 @@ def run_simulation(wing: WingParams, mesh: MeshParams,
     surface = get_wing_planform_surface(wing_panels)
     wake = build_steady_wake(flcond=flcond, vortex_panels=vortex_panels)
     aic = get_influence_matrix(vortex_panels=vortex_panels, wake=wake,
-                                   cpoints=cpoints, normals=normal_vectors)
+                               cpoints=cpoints, normals=normal_vectors)
     rhs = get_rhs(flcond=flcond, normals=normal_vectors)
     circulation = solve_net_panel_circulation_distribution(
         aic=aic,
@@ -262,6 +262,5 @@ def run_simulation(wing: WingParams, mesh: MeshParams,
     )
 
     res = get_aero_distributions(flcond=flcond, wing=wing, mesh=mesh,
-                                     net_circulation=circulation,
-                                     surface=surface)
+                                 net_circulation=circulation, surface=surface)
     return res
