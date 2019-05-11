@@ -44,7 +44,6 @@ matrix:
 before_install:
   - python --version
   - uname -a
-  - lsb_release -a
 install:
   - pip install tox
   - virtualenv --version
