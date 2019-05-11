@@ -4,10 +4,13 @@
 .. |appveyor| image:: https://img.shields.io/appveyor/ci/partmor/ezaero/master.svg?style=flat-square&logo=appveyor
    :target: https://ci.appveyor.com/project/partmor/ezaero/branch/master
 
+.. |license| image:: https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square
+   :target: https://github.com/partmor/ezaero/raw/master/LICENSE
+
 ezaero
 ======
 
-|travisci| |appveyor|
+|travisci| |appveyor| |license|
 
 [Under construction - see `Motivation`_]
 
