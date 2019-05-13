@@ -169,14 +169,17 @@ def build_steady_wake(flcond: FlightConditions, vortex_panels: np.ndarray,
     return wake
 
 
+def norm_23_ext(v):
+    return np.linalg.norm(v, ord=2, axis=3, keepdims=True)
+
+
 def biot_savart_vectorized(r1):
-    norm = lambda v: np.linalg.norm(v, ord=2, axis=3, keepdims=True)
     r2 = np.roll(r1, shift=-1, axis=2)
     cp = np.cross(r1, r2)
     d1 = r2 - r1
-    d2 = r1 / norm(r1) - r2 / norm(r2)
+    d2 = r1 / norm_23_ext(r1) - r2 / norm_23_ext(r2)
     vel = np.einsum('ijkl,ijkl->ijk', d1, d2)[:, :, :, np.newaxis]
-    vel = -1 / (4 * np.pi) * cp / (norm(cp)**2) * vel
+    vel = -1 / (4 * np.pi) * cp / (norm_23_ext(cp)**2) * vel
     return vel.sum(axis=2)
 
 
