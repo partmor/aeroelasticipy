@@ -70,26 +70,48 @@ def build_panel(wing: WingParams, mesh: MeshParams, i: int, j: int):
 
 def build_wing_panels(wing: WingParams, mesh: MeshParams):
     """
-    output:
-        X[spanwise ix, chordwise ix, vertex ix, dimension ix]
-        X_pc[spanwise ix, chordwise ix, dimension ix]
+    Construct wing panels and collocation points given the definition of
+    the geometry of the wing and mesh.
+
+    Parameters
+    ----------
+    wing : WingParams
+        Wing geometry specification.
+    mesh : MeshParams
+        Mesh geometry specification.
+
+    Returns
+    -------
+    wing_panels : np.ndarray, shape (m, n, 4, 3)
+        Array containing the (x,y,z) coordinates of all wing panel vertices.
+    cpoints : np.ndarray, shape (m, n, 3)
+        Array containing the (x,y,z) coordinates of all collocation points.
     """
     m, n = mesh.m, mesh.n
 
-    X = np.empty((m, n, 4, 3))
-    X_pc = np.empty((m, n, 3))
+    wing_panels = np.empty((m, n, 4, 3))
+    cpoints = np.empty((m, n, 3))
 
     for i in range(m):
         for j in range(n):
-            X[i, j], X_pc[i, j] = build_panel(wing, mesh, i, j)
+            wing_panels[i, j], cpoints[i, j] = build_panel(wing, mesh, i, j)
 
-    return X, X_pc
+    return wing_panels, cpoints
 
 
 def build_wing_vortex_panels(wing_panels: np.ndarray):
     """
-    output:
-        vortex_panels[spanwise ix, chordwise ix, vertex ix, dimension ix]
+    Build vortex panels from the wing panels.
+
+    Parameters
+    ----------
+    wing_panels : np.ndarray, shape (m, n, 4, 3)
+        Array containing the (x,y,z) coordinates of all wing panel vertices.
+
+    Returns
+    -------
+    aic : np.ndarray, shape (m, n, 4, 3)
+        Array containing the (x,y,z) coordinates of all vortex panel vertices.
     """
     m, n = wing_panels.shape[:2]
     X, Y, Z = [wing_panels[:, :, :, i] for i in range(3)]
@@ -100,23 +122,22 @@ def build_wing_vortex_panels(wing_panels: np.ndarray):
     YV = Y
 
     ZV = np.empty((m, n, 4))
-    dzv = Z[:, :, [3, 2]] - Z[:, :, [0, 1]]
-    ZV[:, :, [0, 1]] = Z[:, :, [0, 1]] + 1 / 4 * dzv
-    ZV[:, :, [3, 2]] = Z[:, :, [0, 1]] + 5 / 4 * dzv
+    Z01 = Z[:, :, [0, 1]]
+    dzv = Z[:, :, [3, 2]] - Z01
+    ZV[:, :, [0, 1]] = Z01 + 1 / 4 * dzv
+    ZV[:, :, [3, 2]] = Z01 + 5 / 4 * dzv
 
     vortex_panels = np.stack([XV, YV, ZV], axis=3)
     return vortex_panels
 
 
 def get_panel_normal_vectors(wing_panels: np.ndarray):
-    m, n = wing_panels.shape[:2]
-
     # diagonal vectors
     d1 = wing_panels[:, :, 2] - wing_panels[:, :, 0]
     d2 = wing_panels[:, :, 1] - wing_panels[:, :, 3]
     nv = np.cross(d1, d2)
 
-    normal_vector = nv / np.linalg.norm(nv, ord=2, axis=2).reshape((m, n, 1))
+    normal_vector = nv / np.linalg.norm(nv, ord=2, axis=2, keepdims=True)
     return normal_vector
 
 
@@ -148,11 +169,8 @@ def build_steady_wake(flcond: FlightConditions, vortex_panels: np.ndarray,
     return wake
 
 
-def norm(v):
-    return np.linalg.norm(v, ord=2, axis=3)[:, :, :, np.newaxis]
-
-
 def biot_savart_vectorized(r1):
+    norm = lambda v: np.linalg.norm(v, ord=2, axis=3, keepdims=True)
     r2 = np.roll(r1, shift=-1, axis=2)
     cp = np.cross(r1, r2)
     d1 = r2 - r1
@@ -164,42 +182,97 @@ def biot_savart_vectorized(r1):
 
 def get_wing_influence_matrix(vortex_panels: np.ndarray,
                               cpoints: np.ndarray, normals: np.ndarray):
+    """
+    Calculate wing influence matrix component.
+
+    Parameters
+    ----------
+    vortex_panels : np.ndarray, shape (m, n, 4, 3)
+        Array containing the (x,y,z) coordinates of all vortex panel vertices.
+    cpoints : np.ndarray, shape (m, n, 3)
+        Array containing the (x,y,z) coordinates of all collocation points.
+    normals : np.ndarray, shape (m, n, 3)
+        Array containing the normal vectors to all wing panels.
+
+    Returns
+    -------
+    aic : np.ndarray, shape (m * n, m * n)
+        Wing contribution to the influence matrix.
+    """
 
     m, n = vortex_panels.shape[:2]
 
     r = (
-        vortex_panels.reshape(m * n, 4, 3)[:, np.newaxis, :, :]
-        - cpoints.reshape(m * n, 3)[np.newaxis, :, np.newaxis, :]
+        vortex_panels.reshape((m * n, 1, 4, 3))
+        - cpoints.reshape((1, m * n, 1, 3))
     )
 
     vel = biot_savart_vectorized(r)
-    nv = normals.reshape(m * n, 3)[np.newaxis, :, :]
-    aic = np.einsum('ijk,ijk->ij', vel, nv).T
+    nv = normals.reshape((m * n, 3))
+    aic = np.einsum('ijk,jk->ji', vel, nv)
     return aic
 
 
 def get_wake_wing_influence_matrix(cpoints: np.ndarray, wake: np.ndarray,
                                    normals: np.ndarray):
+    """
+    Calculate steady wake influence matrix component.
+
+    Parameters
+    ----------
+    cpoints : np.ndarray, shape (m, n, 3)
+        Array containing the (x,y,z) coordinates of all collocation points.
+    wake : np.ndarray, shape (n, 4, 3)
+        Array containing the (x,y,z) coordinates of the panel vertices that
+        form the steady wake.
+    normals : np.ndarray, shape (m, n, 3)
+        Array containing the normal vectors to all wing panels.
+
+    Returns
+    -------
+    aic : np.ndarray, shape (m * n, m * n)
+        Wake contribution to the influence matrix.
+    """
 
     m, n = cpoints.shape[:2]
 
     aic_w = np.zeros((m * n, m * n))
-    r = wake[:, np.newaxis, :, :] - \
-        cpoints.reshape(m * n, 3)[np.newaxis, :, np.newaxis, :]
+    r = (
+        wake[:, np.newaxis, :, :]
+        - cpoints.reshape((1, m * n, 1, 3))
+    )
     vel = biot_savart_vectorized(r)
-    nv = normals.reshape(m * n, 3)
-    aic_w[:, -n:] = np.einsum('ijk,ijk->ij', vel, nv[np.newaxis, :, :]).T
+    nv = normals.reshape((m * n, 3))
+    aic_w[:, -n:] = np.einsum('ijk,jk->ji', vel, nv)
     return aic_w
 
 
 def get_influence_matrix(vortex_panels: np.ndarray, wake: np.ndarray,
                          cpoints: np.ndarray, normals: np.ndarray):
+    """
+    Calcualte complete influence matrix.
 
-    aic = (
+    Parameters
+    ----------
+    vortex_panels : np.ndarray, shape (m, n, 4, 3)
+        Array containing the (x,y,z) coordinates of all vortex panel vertices.
+    wake : np.ndarray, shape (n, 4, 3)
+        Array containing the (x,y,z) coordinates of the panel vertices that
+        form the steady wake.
+    cpoints : np.ndarray, shape (m, n, 3)
+        Array containing the (x,y,z) coordinates of all collocation points.
+    normals : np.ndarray, shape (m, n, 3)
+        Array containing the normal vectors to all wing panels.
+
+    Returns
+    -------
+    aic : np.ndarray, shape (m * n, m * n)
+        Influence matrix.
+    """
+    return (
         get_wing_influence_matrix(vortex_panels, cpoints, normals)
         + get_wake_wing_influence_matrix(cpoints, wake, normals)
     )
-    return aic
 
 
 def get_rhs(flcond: FlightConditions, normals: np.ndarray):
