@@ -40,6 +40,13 @@ setup(
     ],
     extras_require={
         'jupyter': ['notebook'],
-        'dev': ['pytest']
+        'dev': [
+            'flake8',
+            'isort',
+            'pytest',
+            'sphinx',
+            'sphinx_rtd_theme'
+            'tox'
+        ]
     }
 )
