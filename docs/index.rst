@@ -3,18 +3,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to ezaero's documentation!
-==================================
+ezaero - Aerodynamics in Python
+===============================
+
+**Under construction**
+
+ezaero (easy-aero) is an open source Python package oriented to implement numerical methods
+for Aerodynamics, such as the Vortex lattice Method for lifting surfaces.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   api/vlm/steady
