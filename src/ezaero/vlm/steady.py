@@ -4,8 +4,8 @@ implementation for lifting surfaces.
 
 References
 ----------
-.. [1] Katz, J. et al., *Low-Speed Aerodynamics*, 2nd ed,
-Cambridge University Press, 2001: chapter 12
+.. [1] Katz, J. et al., *Low-Speed Aerodynamics*, 2nd ed, Cambridge University
+   Press, 2001: chapter 12
 """
 
 from collections import namedtuple
