@@ -1,6 +1,6 @@
 """
 Effect of dihedral on the lift coefficient slope of rectangular wings.
-[From Low Speed Aerodynamics ,2nd ed, Katz et al. (see figure 12.21)]
+[From Low Speed Aerodynamics, 2nd ed, Katz et al., figure 12.21]
 """
 import time
 
