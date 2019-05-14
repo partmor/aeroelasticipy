@@ -1,7 +1,18 @@
+"""
+The :mod:`ezaero.vlm.steady` module includes a Vortex Lattice Method
+implementation for lifting surfaces.
+
+References
+----------
+.. [1] Katz, J. et al., *Low-Speed Aerodynamics*, 2nd ed,
+Cambridge University Press, 2001: chapter 12
+"""
+
 from collections import namedtuple
 
 import numpy as np
 
+# TODO: write these namedtuples as playin classes, to support docstrings
 WingParams = namedtuple('WingParams', 'cr, ct, bp, theta, delta')
 MeshParams = namedtuple('MeshParams', 'm, n')
 FlightConditions = namedtuple('FlightConditions', 'ui, alpha, rho')
@@ -18,8 +29,10 @@ def get_chord_at_section(y, cr, ct, bp):
     return c
 
 
-def build_panel(wing: WingParams, mesh: MeshParams, i: int, j: int):
+def build_panel(wing, mesh, i, j):
     """
+    Construct a wing panel indexed by its chord and spanwise indices.
+
         ^x    C --- D
     y   |     |     |
     <---*     A --- B
@@ -27,6 +40,25 @@ def build_panel(wing: WingParams, mesh: MeshParams, i: int, j: int):
     A-B = forward segment
     C-D = rear segment
     Clockwise sequence: ABDC
+
+    Parameters
+    ----------
+    wing : WingParams
+        Wing geometry specification.
+    mesh : MeshParams
+        Mesh geometry specification.
+    i : int
+        Panel chordwise index.
+    j : int
+        Panel spanwise index.
+
+    Returns
+    -------
+    panel : np.ndarray, shape (4, 3)
+        Array containing the (x,y,z) coordinates of the (`i`,`j`)-th panel's
+        vertices (sorted A-B-D-C).
+    pc : np.ndarray, shape (3, )
+        (x,y,z) coordinates of the (`i`,`j`)-th panel's collocation point.
     """
 
     dy = wing.bp / mesh.n
@@ -68,7 +100,7 @@ def build_panel(wing: WingParams, mesh: MeshParams, i: int, j: int):
     return panel, pc
 
 
-def build_wing_panels(wing: WingParams, mesh: MeshParams):
+def build_wing_panels(wing, mesh):
     """
     Construct wing panels and collocation points given the definition of
     the geometry of the wing and mesh.
@@ -99,9 +131,9 @@ def build_wing_panels(wing: WingParams, mesh: MeshParams):
     return wing_panels, cpoints
 
 
-def build_wing_vortex_panels(wing_panels: np.ndarray):
+def build_wing_vortex_panels(wing_panels):
     """
-    Build vortex panels from the wing panels.
+    Build wing vortex panels.
 
     Parameters
     ----------
@@ -131,20 +163,49 @@ def build_wing_vortex_panels(wing_panels: np.ndarray):
     return vortex_panels
 
 
-def get_panel_normal_vectors(wing_panels: np.ndarray):
+def calculate_panel_normal_vectors(wing_panels):
+    """
+    Calculate the normal vector for each wing panel, approximated
+    by the direction of the cross product of the panel diagonals.
+
+    Parameters
+    ----------
+    wing_panels : np.ndarray, shape (m, n, 4, 3)
+        Array containing the (x,y,z) coordinates of all wing panel vertices.
+
+    Returns
+    -------
+    normals : np.ndarray, shape (m, n, 3)
+        Array containing the normal vectors to all wing panels.
+    """
+
     # diagonal vectors
     d1 = wing_panels[:, :, 2] - wing_panels[:, :, 0]
     d2 = wing_panels[:, :, 1] - wing_panels[:, :, 3]
     nv = np.cross(d1, d2)
 
-    normal_vector = nv / np.linalg.norm(nv, ord=2, axis=2, keepdims=True)
-    return normal_vector
+    normals = nv / np.linalg.norm(nv, ord=2, axis=2, keepdims=True)
+    return normals
 
 
-def get_wing_planform_surface(wing_panels: np.ndarray):
+def calculate_wing_planform_surface(wing_panels):
+    """
+    Calculate the planform projected surface of all wing panels.
+
+    Parameters
+    ----------
+    wing_panels : np.ndarray, shape (m, n, 4, 3)
+        Array containing the (x,y,z) coordinates of all wing panel vertices.
+
+    Returns
+    -------
+    panel_surface : np.ndarray, shape (m, n, 3)
+        Array containing the normal vectors to all wing panels.
+    """
+
     x, y = [wing_panels[:, :, :, i] for i in range(2)]
 
-    # shoelace formula to calculate flat polygon area
+    # shoelace formula to calculate flat polygon area (XY projection)
     einsum_str = 'ijk,ijk->ij'
     d1 = np.einsum(einsum_str, x, np.roll(y, 1, axis=2))
     d2 = np.einsum(einsum_str, y, np.roll(x, 1, axis=2))
@@ -153,8 +214,27 @@ def get_wing_planform_surface(wing_panels: np.ndarray):
     return panel_surface
 
 
-def build_steady_wake(flcond: FlightConditions, vortex_panels: np.ndarray,
-                      offset=300):
+def build_steady_wake(flcond, vortex_panels, offset=300):
+    """
+    Build the steady wake vortex panels.
+
+    Parameters
+    ----------
+    flcond : FlightConditions
+        Definition of the flight conditions.
+    vortex_panels : np.ndarray, shape (m, n, 4, 3)
+        Array containing the (x,y,z) coordinates of all wing vortex panel
+        vertices.
+    offset : int
+        Downstream distance at which the steady wake is truncated
+        (expressed in multiples of the wingspan)
+
+    Returns
+    -------
+    wake : np.ndarray, shape (n, 4, 3)
+        Array containing the (x,y,z) coordinates of the panel vertices that
+        form the steady wake.
+    """
 
     m, n = vortex_panels.shape[:2]
     bp = vortex_panels[:, :, :, 1].max() - vortex_panels[:, :, :, 1].min()
@@ -183,10 +263,9 @@ def biot_savart_vectorized(r1):
     return vel.sum(axis=2)
 
 
-def get_wing_influence_matrix(vortex_panels: np.ndarray,
-                              cpoints: np.ndarray, normals: np.ndarray):
+def calculate_wing_influence_matrix(vortex_panels, cpoints, normals):
     """
-    Calculate wing influence matrix component.
+    Calculate influence matrix (wing contribution).
 
     Parameters
     ----------
@@ -216,10 +295,9 @@ def get_wing_influence_matrix(vortex_panels: np.ndarray,
     return aic
 
 
-def get_wake_wing_influence_matrix(cpoints: np.ndarray, wake: np.ndarray,
-                                   normals: np.ndarray):
+def calculate_wake_wing_influence_matrix(cpoints, wake, normals):
     """
-    Calculate steady wake influence matrix component.
+    Calculate influence matrix (steady wake contribution).
 
     Parameters
     ----------
@@ -250,10 +328,9 @@ def get_wake_wing_influence_matrix(cpoints: np.ndarray, wake: np.ndarray,
     return aic_w
 
 
-def get_influence_matrix(vortex_panels: np.ndarray, wake: np.ndarray,
-                         cpoints: np.ndarray, normals: np.ndarray):
+def calculate_influence_matrix(vortex_panels, wake, cpoints, normals):
     """
-    Calcualte complete influence matrix.
+    Calculate complete influence matrix.
 
     Parameters
     ----------
@@ -263,22 +340,38 @@ def get_influence_matrix(vortex_panels: np.ndarray, wake: np.ndarray,
         Array containing the (x,y,z) coordinates of the panel vertices that
         form the steady wake.
     cpoints : np.ndarray, shape (m, n, 3)
-        Array containing the (x,y,z) coordinates of all collocation points.
+        Array containing the (x,y,z) coordinates of all panel collocation
+        points.
     normals : np.ndarray, shape (m, n, 3)
         Array containing the normal vectors to all wing panels.
 
     Returns
     -------
     aic : np.ndarray, shape (m * n, m * n)
-        Influence matrix.
+        Influence matrix, including wing and wake contributions.
     """
     return (
-        get_wing_influence_matrix(vortex_panels, cpoints, normals)
-        + get_wake_wing_influence_matrix(cpoints, wake, normals)
+            calculate_wing_influence_matrix(vortex_panels, cpoints, normals)
+            + calculate_wake_wing_influence_matrix(cpoints, wake, normals)
     )
 
 
-def get_rhs(flcond: FlightConditions, normals: np.ndarray):
+def calculate_rhs(flcond, normals):
+    """
+    Calculate the RHS vector.
+
+    Parameters
+    ----------
+    flcond : FlightConditions
+        Definition of the flight conditions.
+    normals : np.ndarray, shape (m, n, 3)
+        Array containing the normal vectors of all wing panels.
+
+    Returns
+    -------
+    rhs : np.ndarray, shape (m * n, )
+        RHS vector.
+    """
     m, n = normals.shape[:2]
 
     u = flcond.ui * np.array([np.cos(flcond.alpha), 0, np.sin(flcond.alpha)])
@@ -286,9 +379,27 @@ def get_rhs(flcond: FlightConditions, normals: np.ndarray):
     return rhs
 
 
-def solve_net_panel_circulation_distribution(aic: np.ndarray, rhs: np.ndarray,
-                                             m: int, n: int):
+def solve_net_panel_circulation_distribution(aic, rhs, m, n):
+    """
+    Calculate panel net circulation by solving the linear equation:
+    AIC * circulation = RHS
 
+    Parameters
+    ----------
+    aic : np.ndarray, shape (m * n, m * n)
+        Influence matrix, including wing and wake contributions.
+    rhs : np.ndarray, shape (m * n, )
+        RHS vector.
+    m : int
+        Chordwise mesh resolution.
+    n : int
+        Spanwise mesh resolution.
+
+    Returns
+    -------
+    net_g : np.ndarray, shape (m, n)
+        Array containing net circulation for each panel.
+    """
     g = np.linalg.solve(aic, rhs).reshape(m, n)
 
     net_g = np.empty_like(g)
@@ -324,12 +435,12 @@ def run_simulation(wing: WingParams, mesh: MeshParams,
 
     wing_panels, cpoints = build_wing_panels(wing=wing, mesh=mesh)
     vortex_panels = build_wing_vortex_panels(wing_panels)
-    normal_vectors = get_panel_normal_vectors(wing_panels)
-    surface = get_wing_planform_surface(wing_panels)
+    normal_vectors = calculate_panel_normal_vectors(wing_panels)
+    surface = calculate_wing_planform_surface(wing_panels)
     wake = build_steady_wake(flcond=flcond, vortex_panels=vortex_panels)
-    aic = get_influence_matrix(vortex_panels=vortex_panels, wake=wake,
-                               cpoints=cpoints, normals=normal_vectors)
-    rhs = get_rhs(flcond=flcond, normals=normal_vectors)
+    aic = calculate_influence_matrix(vortex_panels=vortex_panels, wake=wake,
+                                     cpoints=cpoints, normals=normal_vectors)
+    rhs = calculate_rhs(flcond=flcond, normals=normal_vectors)
     circulation = solve_net_panel_circulation_distribution(
         aic=aic,
         rhs=rhs,

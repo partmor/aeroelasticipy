@@ -21,12 +21,12 @@ flcond = vlm.FlightConditions(ui=100, alpha=1 * np.pi / 180, rho=1.0)
 # the run_simulation method)
 wing_panels, cpoints = vlm.build_wing_panels(wing=wing, mesh=mesh)
 vortex_panels = vlm.build_wing_vortex_panels(wing_panels)
-normal_vectors = vlm.get_panel_normal_vectors(wing_panels)
-surface = vlm.get_wing_planform_surface(wing_panels)
+normal_vectors = vlm.calculate_panel_normal_vectors(wing_panels)
+surface = vlm.calculate_wing_planform_surface(wing_panels)
 wake = vlm.build_steady_wake(flcond=flcond, vortex_panels=vortex_panels)
-aic = vlm.get_influence_matrix(vortex_panels=vortex_panels, wake=wake,
-                               cpoints=cpoints, normals=normal_vectors)
-rhs = vlm.get_rhs(flcond=flcond, normals=normal_vectors)
+aic = vlm.calculate_influence_matrix(vortex_panels=vortex_panels, wake=wake,
+                                     cpoints=cpoints, normals=normal_vectors)
+rhs = vlm.calculate_rhs(flcond=flcond, normals=normal_vectors)
 circulation = vlm.solve_net_panel_circulation_distribution(
     aic=aic,
     rhs=rhs,
