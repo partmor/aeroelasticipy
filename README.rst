@@ -28,12 +28,11 @@ methods for Aerodynamics, such as the 3D Vortex lattice Method for lifting surfa
 Installation
 ------------
 
-To install the package, clone the repo and pip install it:
+To install the package, pip install it from the repo:
 
 .. code-block::
 
-    $ git clone https://github.com/partmor/ezaero.git && cd ezaero
-    $ pip install . # the dot means this directory
+    $ pip install git+https://github.com/partmor/ezaero.git
 
 *[Still not available in PyPI, sorry for that!]*
 
