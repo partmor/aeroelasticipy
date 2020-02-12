@@ -80,19 +80,30 @@ library.
 Development environment
 -----------------------
 
-These are some succint steps to set up a development environment:
+These are some succint steps to set up a development environment and make your first pull request:
 
+Setup the repository
+~~~~~~~~~~~~~~~~~~~~
 1. `Install git <https://git-scm.com/>`_ on your computer.
 2. `Register to GitHub <https://github.com/>`_.
 3. `Fork ezaero <https://help.github.com/articles/fork-a-repo/>`_.
 4. `Clone your fork <https://help.github.com/articles/cloning-a-repository/>`_.
-5. Install it in development mode using
-   :code:`pip install --editable /path/to/ezaero/[dev]` (this means that the
-   installed code will change as soon as you change it in the download
-   location).
-6. Run :code:`tox -e check` to check all the formatting is right.
-7. Run :code:`pytest` to check all the functional tests pass.
-8. Create a new branch.
-9. Make changes and commit.
-10. `Push to your fork <https://help.github.com/articles/pushing-to-a-remote/>`_.
-11. `Open a pull request! <https://help.github.com/articles/creating-a-pull-request/>`_
+
+Create a virtual environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Optional, but highly recommended. Using conda environments you have the advantage of pulling the Python version you need.
+
+1. `Install conda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
+2. Create a conda environment named :code:`ezaero-dev` with Python 3.7: :code:`conda create -n ezaero-dev python=3.7`
+3. `Activate the environment <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#activating-an-environment>`_.
+4. Install the development requirements: :code:`pip install -e /path/to/repo/[dev]`
+
+Implement your changes
+~~~~~~~~~~~~~~~~~~~~~~
+1. Verify all checks and tests pass, with the command: :code:`tox`
+2. Create a new branch.
+3. Make your changes.
+4. Run :code:`tox` again to execute style/formatting checks, unit tests, and documentation build. This will also test your latest changes.
+5. Commit your changes.
+6. `Push to your fork <https://help.github.com/articles/pushing-to-a-remote/>`_.
+7. `Open a pull request! <https://help.github.com/articles/creating-a-pull-request/>`_
