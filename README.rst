@@ -51,17 +51,16 @@ Requirements
 ------------
 ezaero has the following dependencies:
 
-* Python (>=3.5)
+* Python (>=3.6)
 * NumPy
 * matplotlib
 
-ezaero is tested on Linux, Windows and OS X on Python 3.5, 3.6 and 3.7.
+ezaero is tested on Linux, Windows and OS X on Python 3.6 and 3.7.
 
 ==============  ============  ===================
 Platform        Site          Status
 ==============  ============  ===================
-Linux           Travis CI     |travisci|
-OS X            Travis CI     |travisci|
+Linux / OS X    Travis CI     |travisci|
 Windows x64     Appveyor      |appveyor|
 ==============  ============  ===================
 
