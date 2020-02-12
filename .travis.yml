@@ -5,43 +5,39 @@
 # py37 requires dist xenial to run on linux: 
 # 	https://docs.travis-ci.com/user/languages/python/#python-37-and-higher
 #
-# osx requires language generic, and only py27 and py36 are supported
-#	- https://docs.travis-ci.com/user/multi-os/#python-example-unsupported-languages
-#	- the default python is python2, hence osx needs it's own install commands in 
-#	  order to not to install tox under py27.
+# osx requires a hackish approach to run specific versions of Python:
+#   https://blog.travis-ci.com/2019-08-07-extensive-python-testing-on-travis-ci
 
 sudo: false
 language: python
 os: linux
+dist: xenial
 
 matrix:
   include:
-    - python: 3.6
+    - python: 3.7
       env:
         - TOXENV=check
-    - python: 3.6
+    - python: 3.7
       env:
         - TOXENV=coverage
       after_success:
         - pip install codecov
         - codecov
-    - python: 3.6
+    - python: 3.7
       env:
         - TOXENV=docs
-    - python: 3.5
-      env:
-        - TOXENV=py35
     - python: 3.6
       env:
         - TOXENV=py36
     - python: 3.7
-      dist: xenial
       env:
         - TOXENV=py37
     - os: osx
-      language: generic
+      osx_image: xcode10.2 # xcode10.2 — Comes pre-installed with Python 3.7.3
+      language: shell  # 'language: python' is an error on Travis CI macOS
       env:
-        - TOXENV=py36
+        - TOXENV=py37
       install:
         - python3 --version
         - python3 -m pip install tox
