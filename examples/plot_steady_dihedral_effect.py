@@ -44,12 +44,12 @@ for delta in deltas:
 end = time.time()
 elapsed = end - start
 
-print('Elapsed time: {} s'.format(elapsed))
+print("Elapsed time: {} s".format(elapsed))
 
 fig = plt.figure()
-plt.plot(deltas * 180 / np.pi, cla_list, 'o-')
-plt.xlabel(r'$\delta$[deg]')
-plt.ylabel(r'CL$_\alpha$')
+plt.plot(deltas * 180 / np.pi, cla_list, "o-")
+plt.xlabel(r"$\delta$[deg]")
+plt.ylabel(r"CL$_\alpha$")
 plt.ylim(0, 4)
 plt.grid()
 plt.xlim(deltas.min() * 180 / np.pi, deltas.max() * 180 / np.pi)

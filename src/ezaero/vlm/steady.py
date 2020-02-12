@@ -29,6 +29,7 @@ class WingParams:
     delta : float
         Dihedral angle, expressed in radians.
     """
+
     def __init__(self, cr, ct, bp, theta, delta):
         self.cr = cr
         self.ct = ct
@@ -48,6 +49,7 @@ class MeshParams:
     n : int
         Number of spanwise panels.
     """
+
     def __init__(self, m, n):
         self.m = m
         self.n = n
@@ -66,6 +68,7 @@ class FlightConditions:
     rho : float
         Free-stream flow density.
     """
+
     def __init__(self, ui, alpha, rho):
         self.ui = ui
         self.alpha = alpha
@@ -108,7 +111,7 @@ def build_panel(wing, mesh, i, j):
     """
 
     dy = wing.bp / mesh.n
-    y_A = - wing.bp / 2 + j * dy
+    y_A = -wing.bp / 2 + j * dy
     y_B = y_A + dy
     y_C, y_D = y_A, y_B
     y_pc = y_A + dy / 2
@@ -252,7 +255,7 @@ def calculate_wing_planform_surface(wing_panels):
     x, y = [wing_panels[:, :, :, i] for i in range(2)]
 
     # shoelace formula to calculate flat polygon area (XY projection)
-    einsum_str = 'ijk,ijk->ij'
+    einsum_str = "ijk,ijk->ij"
     d1 = np.einsum(einsum_str, x, np.roll(y, 1, axis=2))
     d2 = np.einsum(einsum_str, y, np.roll(x, 1, axis=2))
     panel_surface = 0.5 * np.abs(d1 - d2)
@@ -304,8 +307,8 @@ def biot_savart_vectorized(r1):
     cp = np.cross(r1, r2)
     d1 = r2 - r1
     d2 = r1 / norm_23_ext(r1) - r2 / norm_23_ext(r2)
-    vel = np.einsum('ijkl,ijkl->ijk', d1, d2)[:, :, :, np.newaxis]
-    vel = -1 / (4 * np.pi) * cp / (norm_23_ext(cp)**2) * vel
+    vel = np.einsum("ijkl,ijkl->ijk", d1, d2)[:, :, :, np.newaxis]
+    vel = -1 / (4 * np.pi) * cp / (norm_23_ext(cp) ** 2) * vel
     return vel.sum(axis=2)
 
 
@@ -330,14 +333,11 @@ def calculate_wing_influence_matrix(vortex_panels, cpoints, normals):
 
     m, n = vortex_panels.shape[:2]
 
-    r = (
-        vortex_panels.reshape((m * n, 1, 4, 3))
-        - cpoints.reshape((1, m * n, 1, 3))
-    )
+    r = vortex_panels.reshape((m * n, 1, 4, 3)) - cpoints.reshape((1, m * n, 1, 3))
 
     vel = biot_savart_vectorized(r)
     nv = normals.reshape((m * n, 3))
-    aic = np.einsum('ijk,jk->ji', vel, nv)
+    aic = np.einsum("ijk,jk->ji", vel, nv)
     return aic
 
 
@@ -364,13 +364,10 @@ def calculate_wake_wing_influence_matrix(cpoints, wake, normals):
     m, n = cpoints.shape[:2]
 
     aic_w = np.zeros((m * n, m * n))
-    r = (
-        wake[:, np.newaxis, :, :]
-        - cpoints.reshape((1, m * n, 1, 3))
-    )
+    r = wake[:, np.newaxis, :, :] - cpoints.reshape((1, m * n, 1, 3))
     vel = biot_savart_vectorized(r)
     nv = normals.reshape((m * n, 3))
-    aic_w[:, -n:] = np.einsum('ijk,jk->ji', vel, nv)
+    aic_w[:, -n:] = np.einsum("ijk,jk->ji", vel, nv)
     return aic_w
 
 
@@ -396,10 +393,9 @@ def calculate_influence_matrix(vortex_panels, wake, cpoints, normals):
     aic : np.ndarray, shape (m * n, m * n)
         Influence matrix, including wing and wake contributions.
     """
-    return (
-            calculate_wing_influence_matrix(vortex_panels, cpoints, normals)
-            + calculate_wake_wing_influence_matrix(cpoints, wake, normals)
-    )
+    return calculate_wing_influence_matrix(
+        vortex_panels, cpoints, normals
+    ) + calculate_wake_wing_influence_matrix(cpoints, wake, normals)
 
 
 def calculate_rhs(flcond, normals):
@@ -421,7 +417,7 @@ def calculate_rhs(flcond, normals):
     m, n = normals.shape[:2]
 
     u = flcond.ui * np.array([np.cos(flcond.alpha), 0, np.sin(flcond.alpha)])
-    rhs = - np.dot(normals.reshape(m * n, -1), u)
+    rhs = -np.dot(normals.reshape(m * n, -1), u)
     return rhs
 
 
@@ -472,6 +468,7 @@ class DistributionResults:
     cl_span : np.ndarray, shape (n, )
         Spanwise lift coefficient distribution.
     """
+
     def __init__(self, dp, dL, cl, cl_wing, cl_span):
         self.dp = dp
         self.dL = dL
@@ -510,8 +507,7 @@ def get_aero_distributions(flcond, wing, mesh, net_circulation, surface):
     cl_wing = dL.sum() / (0.5 * flcond.rho * flcond.ui ** 2 * surface.sum())
     cl_span = cl.sum(axis=0) / mesh.m
 
-    return DistributionResults(dL=dL, dp=dp, cl=cl, cl_wing=cl_wing,
-                               cl_span=cl_span)
+    return DistributionResults(dL=dL, dp=dp, cl=cl, cl_wing=cl_wing, cl_span=cl_span)
 
 
 def run_simulation(wing, mesh, flcond):
@@ -539,15 +535,18 @@ def run_simulation(wing, mesh, flcond):
     normal_vectors = calculate_panel_normal_vectors(wing_panels)
     surface = calculate_wing_planform_surface(wing_panels)
     wake = build_steady_wake(flcond=flcond, vortex_panels=vortex_panels)
-    aic = calculate_influence_matrix(vortex_panels=vortex_panels, wake=wake,
-                                     cpoints=cpoints, normals=normal_vectors)
+    aic = calculate_influence_matrix(
+        vortex_panels=vortex_panels, wake=wake, cpoints=cpoints, normals=normal_vectors
+    )
     rhs = calculate_rhs(flcond=flcond, normals=normal_vectors)
     circulation = solve_net_panel_circulation_distribution(
-        aic=aic,
-        rhs=rhs,
-        m=mesh.m,
-        n=mesh.n
+        aic=aic, rhs=rhs, m=mesh.m, n=mesh.n
     )
 
-    return get_aero_distributions(flcond=flcond, wing=wing, mesh=mesh,
-                                  net_circulation=circulation, surface=surface)
+    return get_aero_distributions(
+        flcond=flcond,
+        wing=wing,
+        mesh=mesh,
+        net_circulation=circulation,
+        surface=surface,
+    )
