@@ -8,14 +8,11 @@ References
    Press, 2001: Chapter 12
 """
 
-from dataclasses import dataclass
-
 import numpy as np
 
 from .plotting import plot_cl_distribution_on_wing, plot_control_points, plot_panels
 
 
-@dataclass
 class WingParameters:
     """
     Container for the geometric parameters of the analyzed wing.
@@ -34,14 +31,21 @@ class WingParameters:
         Dihedral angle, expressed in radians.
     """
 
-    root_chord: float = 1.0
-    tip_chord: float = 1.0
-    planform_wingspan: float = 4
-    sweep_angle: float = 0
-    dihedral_angle: float = 0
+    def __init__(
+        self,
+        root_chord=1.0,
+        tip_chord=1.0,
+        planform_wingspan=4,
+        sweep_angle=0,
+        dihedral_angle=0,
+    ):
+        self.root_chord = root_chord
+        self.tip_chord = tip_chord
+        self.planform_wingspan = planform_wingspan
+        self.sweep_angle = sweep_angle
+        self.dihedral_angle = dihedral_angle
 
 
-@dataclass
 class MeshParameters:
     """
     Container for the wing mesh parameters.
@@ -54,11 +58,11 @@ class MeshParameters:
         Number of spanwise panels.
     """
 
-    m: int
-    n: int
+    def __init__(self, m, n):
+        self.m = m
+        self.n = n
 
 
-@dataclass
 class FlightConditions:
     """
     Container for the flight conditions.
@@ -73,12 +77,12 @@ class FlightConditions:
         Free-stream flow density.
     """
 
-    ui: float = 100
-    aoa: float = np.pi / 180
-    rho: float = 1
+    def __init__(self, ui=100, aoa=np.pi / 180, rho=1.0):
+        self.ui = ui
+        self.aoa = aoa
+        self.rho = rho
 
 
-@dataclass
 class SimulationResults:
     """
     Container for the resulting distributions from the steady VLM simulation.
@@ -97,11 +101,12 @@ class SimulationResults:
         Spanwise lift coefficient distribution.
     """
 
-    dp: np.ndarray
-    dL: np.ndarray
-    cl: np.ndarray
-    cl_wing: float
-    cl_span: np.ndarray
+    def __init__(self, dp, dL, cl, cl_wing, cl_span):
+        self.dp = dp
+        self.dL = dL
+        self.cl = cl
+        self.cl_wing = cl_wing
+        self.cl_span = cl_span
 
 
 class Simulation:
