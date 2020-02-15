@@ -22,10 +22,10 @@ start = time.time()
 deltas = np.array([-45, -30, -15, 0, 15, 30]) * np.pi / 180
 
 # define mesh parameters and flight conditions
-mesh = vlm.MeshParams(m=8, n=30)
+mesh = vlm.MeshParameters(m=8, n=30)
 # slope for each dihedral calculated using two flight conditions
-flcond_0 = vlm.FlightConditions(ui=100.0, alpha=0.0, rho=1.0)
-flcond_1 = vlm.FlightConditions(ui=100.0, alpha=np.pi / 180, rho=1.0)
+flcond_0 = vlm.FlightConditions(ui=100.0, aoa=0.0, rho=1.0)
+flcond_1 = vlm.FlightConditions(ui=100.0, aoa=np.pi / 180, rho=1.0)
 cla_list = []  # container for the lift coefficient slope
 for delta in deltas:
     # The figure in the book uses an aspect ratio of 4. It does not
@@ -33,11 +33,21 @@ for delta in deltas:
     # the wingspan with the dihedral angle
     bp = 4 * np.cos(delta)
     # define rectangular wing (same cr and ct), with no sweep (theta).
-    wing = vlm.WingParams(cr=1.0, ct=1.0, bp=bp, theta=0, delta=delta)
-    res_0 = vlm.run_simulation(wing=wing, mesh=mesh, flcond=flcond_0)
-    res_1 = vlm.run_simulation(wing=wing, mesh=mesh, flcond=flcond_1)
+    wing = vlm.WingParameters(
+        root_chord=1.0,
+        tip_chord=1.0,
+        planform_wingspan=bp,
+        sweep_angle=0,
+        dihedral_angle=delta,
+    )
+    res_0 = vlm.Simulation(
+        wing_parameters=wing, mesh_parameters=mesh, flight_conditions=flcond_0
+    ).run()
+    res_1 = vlm.Simulation(
+        wing_parameters=wing, mesh_parameters=mesh, flight_conditions=flcond_1
+    ).run()
     d_cl = res_1.cl_wing - res_0.cl_wing
-    d_alpha = flcond_1.alpha - flcond_0.alpha
+    d_alpha = flcond_1.aoa - flcond_0.aoa
     slope = d_cl / d_alpha * np.cos(delta)  # project load
     cla_list.append(slope)
 

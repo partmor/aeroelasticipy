@@ -6,22 +6,35 @@ Minimal example of simulation execution.
 """
 import time
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 import ezaero.vlm.steady as vlm
 
-start = time.time()
-
 # definition of wing, mesh and flight condition parameters
-wing = vlm.WingParams(
-    cr=1, ct=0.6, bp=4, theta=30 * np.pi / 180, delta=15 * np.pi / 180
+wing = vlm.WingParameters(
+    root_chord=1,
+    tip_chord=0.6,
+    planform_wingspan=4,
+    sweep_angle=30 * np.pi / 180,
+    dihedral_angle=15 * np.pi / 180,
 )
-mesh = vlm.MeshParams(m=4, n=16)
-flcond = vlm.FlightConditions(ui=100, alpha=3 * np.pi / 180, rho=1.0)
+mesh = vlm.MeshParameters(m=4, n=16)
+flcond = vlm.FlightConditions(ui=100, aoa=3 * np.pi / 180, rho=1.0)
 
-# run simulation and collect results
-res = vlm.run_simulation(wing=wing, mesh=mesh, flcond=flcond)
+sim = vlm.Simulation(
+    wing_parameters=wing, mesh_parameters=mesh, flight_conditions=flcond
+)
 
-print("Elapsed time: {} s".format(time.time() - start))
+start = time.time()
+res = sim.run()
+print(f"Wing lift coefficient: {res.cl_wing}")
+print(f"Elapsed time: {time.time() - start} s")
 
-print("Wing lift coefficient: {}".format(res.cl_wing))
+# plot wing panels, vortex panels, and collocation points
+sim.plot_wing()
+plt.show()
+
+# plot cl distribution on wing
+sim.plot_cl()
+plt.show()

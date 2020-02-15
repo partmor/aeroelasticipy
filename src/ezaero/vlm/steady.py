@@ -9,8 +9,11 @@ References
 """
 
 from dataclasses import dataclass
+
 import numpy as np
-from .plotting import plot_panels, plot_control_points, plot_cl_distribution_on_wing
+
+from .plotting import plot_cl_distribution_on_wing, plot_control_points, plot_panels
+
 
 @dataclass
 class WingParameters:
@@ -30,11 +33,13 @@ class WingParameters:
     dihedral_angle : float
         Dihedral angle, expressed in radians.
     """
+
     root_chord: float = 1.0
     tip_chord: float = 1.0
     planform_wingspan: float = 4
     sweep_angle: float = 0
     dihedral_angle: float = 0
+
 
 @dataclass
 class MeshParameters:
@@ -48,8 +53,10 @@ class MeshParameters:
     n : int
         Number of spanwise panels.
     """
+
     m: int
     n: int
+
 
 @dataclass
 class FlightConditions:
@@ -65,9 +72,11 @@ class FlightConditions:
     rho : float
         Free-stream flow density.
     """
-    ui : float = 100
-    aoa : float = np.pi / 180
-    rho : float = 1
+
+    ui: float = 100
+    aoa: float = np.pi / 180
+    rho: float = 1
+
 
 @dataclass
 class SimulationResults:
@@ -87,15 +96,21 @@ class SimulationResults:
     cl_span : np.ndarray, shape (n, )
         Spanwise lift coefficient distribution.
     """
-    dp : np.ndarray
-    dL : np.ndarray
-    cl : np.ndarray
-    cl_wing : float
-    cl_span : np.ndarray
+
+    dp: np.ndarray
+    dL: np.ndarray
+    cl: np.ndarray
+    cl_wing: float
+    cl_span: np.ndarray
 
 
 class Simulation:
-    def __init__(self, wing_parameters: WingParameters, mesh_parameters: MeshParameters, flight_conditions: FlightConditions):
+    def __init__(
+        self,
+        wing_parameters: WingParameters,
+        mesh_parameters: MeshParameters,
+        flight_conditions: FlightConditions,
+    ):
         self.wing = wing_parameters
         self.mesh = mesh_parameters
         self.flight_conditions = flight_conditions
@@ -120,10 +135,9 @@ class Simulation:
         self.distributions = self._calculate_aero_distributions_from_circulation()
         return self.distributions
 
-
     def plot_wing(self, **kwargs):
         ax = plot_panels(self.wing_panels, **kwargs)
-        plot_panels(self.vortex_panels, edge_color='r', fill_color=0, ax=ax)
+        plot_panels(self.vortex_panels, edge_color="r", fill_color=0, ax=ax)
         plot_control_points(self.cpoints, ax=ax)
 
     def plot_cl(self):
@@ -156,14 +170,25 @@ class Simulation:
         y_pc = y_A + dy / 2
 
         # chord law evaluation
-        c_AC, c_BD, c_pc = [get_chord_at_section(y, root_chord=self.wing.root_chord, tip_chord=self.wing.tip_chord, span=self.wing.planform_wingspan) for y in (y_A, y_B, y_pc)]
+        c_AC, c_BD, c_pc = [
+            get_chord_at_section(
+                y,
+                root_chord=self.wing.root_chord,
+                tip_chord=self.wing.tip_chord,
+                span=self.wing.planform_wingspan,
+            )
+            for y in (y_A, y_B, y_pc)
+        ]
 
         # division of the chord in m equal panels
         dx_AC, dx_BD, dx_pc = [c / self.mesh.m for c in (c_AC, c_BD, c_pc)]
 
         # r,s,q are the X coordinates of the quarter chord line at spanwise
         # locations: y_A, y_B and y_pc respectively
-        r, s, q = [get_quarter_chord_x(y, cr=self.wing.root_chord, sweep=self.wing.sweep_angle) for y in (y_A, y_B, y_pc)]
+        r, s, q = [
+            get_quarter_chord_x(y, cr=self.wing.root_chord, sweep=self.wing.sweep_angle)
+            for y in (y_A, y_B, y_pc)
+        ]
 
         x_A = (r - c_AC / 4) + i * dx_AC
         x_B = (s - c_BD / 4) + i * dx_BD
@@ -200,7 +225,6 @@ class Simulation:
             for j in range(self.mesh.n):
                 self.wing_panels[i, j], self.cpoints[i, j] = self._build_panel(i, j)
 
-
     def _build_wing_vortex_panels(self):
         """
         Creates
@@ -222,7 +246,6 @@ class Simulation:
         ZV[:, :, [3, 2]] = Z01 + 5 / 4 * dzv
 
         self.vortex_panels = np.stack([XV, YV, ZV], axis=3)
-
 
     def _calculate_panel_normal_vectors(self):
         """
@@ -274,9 +297,18 @@ class Simulation:
         """
         self.wake = np.empty((self.mesh.n, 4, 3))
         self.wake[:, [0, 1]] = self.vortex_panels[self.mesh.m - 1][:, [3, 2]]
-        delta = offset * self.wing.planform_wingspan * np.array([np.cos(self.flight_conditions.aoa), 0, np.sin(self.flight_conditions.aoa)])
+        delta = (
+            offset
+            * self.wing.planform_wingspan
+            * np.array(
+                [
+                    np.cos(self.flight_conditions.aoa),
+                    0,
+                    np.sin(self.flight_conditions.aoa),
+                ]
+            )
+        )
         self.wake[:, [3, 2]] = self.wake[:, [0, 1]] + delta
-
 
     def _calculate_wing_influence_matrix(self):
         """
@@ -287,12 +319,13 @@ class Simulation:
         aic : np.ndarray, shape (m * n, m * n)
             Wing contribution to the influence matrix.
         """
-        r = self.vortex_panels.reshape((self.mesh.m * self.mesh.n, 1, 4, 3)) - self.cpoints.reshape((1, self.mesh.m * self.mesh.n, 1, 3))
+        r = self.vortex_panels.reshape(
+            (self.mesh.m * self.mesh.n, 1, 4, 3)
+        ) - self.cpoints.reshape((1, self.mesh.m * self.mesh.n, 1, 3))
 
         vel = biot_savart(r)
         nv = self.normals.reshape((self.mesh.m * self.mesh.n, 3))
         self.aic_wing = np.einsum("ijk,jk->ji", vel, nv)
-
 
     def _calculate_wake_wing_influence_matrix(self):
         """
@@ -308,7 +341,7 @@ class Simulation:
         r = self.wake[:, np.newaxis, :, :] - self.cpoints.reshape((1, mn, 1, 3))
         vel = biot_savart(r)
         nv = self.normals.reshape((mn, 3))
-        self.aic_wake[:, -self.mesh.n:] = np.einsum("ijk,jk->ji", vel, nv)
+        self.aic_wake[:, -self.mesh.n :] = np.einsum("ijk,jk->ji", vel, nv)
 
     def _calculate_influence_matrix(self):
         """
@@ -328,9 +361,10 @@ class Simulation:
         rhs : np.ndarray, shape (m * n, )
             RHS vector.
         """
-        u = self.flight_conditions.ui * np.array([np.cos(self.flight_conditions.aoa), 0, np.sin(self.flight_conditions.aoa)])
+        u = self.flight_conditions.ui * np.array(
+            [np.cos(self.flight_conditions.aoa), 0, np.sin(self.flight_conditions.aoa)]
+        )
         self.rhs = -np.dot(self.normals.reshape(self.mesh.m * self.mesh.n, -1), u)
-
 
     def _solve_net_panel_circulation_distribution(self):
         """
@@ -350,7 +384,11 @@ class Simulation:
 
     def _calculate_aero_distributions_from_circulation(self):
         m, n = self.mesh.m, self.mesh.n
-        rho, aoa, ui = self.flight_conditions.rho, self.flight_conditions.aoa, self.flight_conditions.ui
+        rho, aoa, ui = (
+            self.flight_conditions.rho,
+            self.flight_conditions.aoa,
+            self.flight_conditions.ui,
+        )
         bp = self.wing.planform_wingspan
         dL = self.net_circulation * rho * ui * bp / n
         dp = dL / self.panel_surfaces
@@ -358,6 +396,7 @@ class Simulation:
         cl_wing = dL.sum() / (0.5 * rho * ui ** 2 * self.panel_surfaces.sum())
         cl_span = cl.sum(axis=0) / m
         return SimulationResults(dL=dL, dp=dp, cl=cl, cl_wing=cl_wing, cl_span=cl_span)
+
 
 def get_quarter_chord_x(y, cr, sweep):
     # slope of the quarter chord line
