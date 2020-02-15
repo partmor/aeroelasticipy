@@ -384,9 +384,8 @@ class Simulation:
 
     def _calculate_aero_distributions_from_circulation(self):
         m, n = self.mesh.m, self.mesh.n
-        rho, aoa, ui = (
+        rho, ui = (
             self.flight_conditions.rho,
-            self.flight_conditions.aoa,
             self.flight_conditions.ui,
         )
         bp = self.wing.planform_wingspan
