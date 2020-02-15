@@ -25,16 +25,22 @@ def rectangular_wing_simulation():
     wing_params = WingParameters()
     mesh_params = MeshParameters(m=4, n=10)
     flight_cond = FlightConditions()
-    sim = Simulation(
-        wing_parameters=wing_params,
-        mesh_parameters=mesh_params,
-        flight_conditions=flight_cond,
-    )
+    sim = Simulation(wing=wing_params, mesh=mesh_params, flight_conditions=flight_cond,)
     return sim
 
 
 def test_instantiate_simulation(rectangular_wing_simulation):
     _ = rectangular_wing_simulation
+
+
+def test_plot_wing_not_available_yet(rectangular_wing_simulation):
+    with pytest.raises(AttributeError):
+        rectangular_wing_simulation.plot_wing()
+
+
+def test_plot_result_not_available_yet(rectangular_wing_simulation):
+    with pytest.raises(AttributeError):
+        rectangular_wing_simulation.plot_cl()
 
 
 def test_wing_panels_shape(rectangular_wing_simulation):
@@ -130,14 +136,22 @@ def test_run(rectangular_wing_simulation):
     rectangular_wing_simulation.run()
 
 
+def test_plot_wing_can_run(rectangular_wing_simulation):
+    rectangular_wing_simulation.plot_wing()
+
+
+def test_plot_cl_can_run(rectangular_wing_simulation):
+    rectangular_wing_simulation.plot_cl()
+
+
 @pytest.mark.parametrize(
     "angle_of_attack", np.array((-2, -1, 0, 1, 2, 5)) * np.pi / 180
 )
 def test_cl_for_infinite_wing(angle_of_attack):
     flcond = FlightConditions(ui=50.0, aoa=angle_of_attack, rho=1.0)
     sim = Simulation(
-        wing_parameters=INFINITE_WING["wing"],
-        mesh_parameters=INFINITE_WING["mesh"],
+        wing=INFINITE_WING["wing"],
+        mesh=INFINITE_WING["mesh"],
         flight_conditions=flcond,
     )
     res = sim.run()
@@ -159,9 +173,7 @@ def test_cl_slope_vs_aspect_ratio_for_slender_wing():
             sweep_angle=0.0,
             dihedral_angle=0.0,
         )
-        res = Simulation(
-            wing_parameters=wing, mesh_parameters=mesh, flight_conditions=flcond
-        ).run()
+        res = Simulation(wing=wing, mesh=mesh, flight_conditions=flcond).run()
         clas.append(res.cl_wing / alpha)
 
     slope = (clas[1] - clas[0]) / (bps[1] - bps[0])

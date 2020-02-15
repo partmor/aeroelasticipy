@@ -22,9 +22,7 @@ wing = vlm.WingParameters(
 mesh = vlm.MeshParameters(m=4, n=16)
 flcond = vlm.FlightConditions(ui=100, aoa=3 * np.pi / 180, rho=1.0)
 
-sim = vlm.Simulation(
-    wing_parameters=wing, mesh_parameters=mesh, flight_conditions=flcond
-)
+sim = vlm.Simulation(wing=wing, mesh=mesh, flight_conditions=flcond)
 
 start = time.time()
 res = sim.run()

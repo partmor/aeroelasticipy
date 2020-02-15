@@ -40,12 +40,8 @@ for delta in deltas:
         sweep_angle=0,
         dihedral_angle=delta,
     )
-    res_0 = vlm.Simulation(
-        wing_parameters=wing, mesh_parameters=mesh, flight_conditions=flcond_0
-    ).run()
-    res_1 = vlm.Simulation(
-        wing_parameters=wing, mesh_parameters=mesh, flight_conditions=flcond_1
-    ).run()
+    res_0 = vlm.Simulation(wing=wing, mesh=mesh, flight_conditions=flcond_0).run()
+    res_1 = vlm.Simulation(wing=wing, mesh=mesh, flight_conditions=flcond_1).run()
     d_cl = res_1.cl_wing - res_0.cl_wing
     d_alpha = flcond_1.aoa - flcond_0.aoa
     slope = d_cl / d_alpha * np.cos(delta)  # project load

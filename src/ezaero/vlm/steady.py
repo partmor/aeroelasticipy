@@ -105,14 +105,27 @@ class SimulationResults:
 
 
 class Simulation:
+    """
+        Simulation runner.
+
+        Attributes
+        ----------
+        wing : WingParameters
+            Wing geometry definition.
+        mesh : MeshParameters
+            Mesh specification for the wing.
+        flight_conditions : FlightConditions
+            Flight conditions for the simulation.
+        """
+
     def __init__(
         self,
-        wing_parameters: WingParameters,
-        mesh_parameters: MeshParameters,
+        wing: WingParameters,
+        mesh: MeshParameters,
         flight_conditions: FlightConditions,
     ):
-        self.wing = wing_parameters
-        self.mesh = mesh_parameters
+        self.wing = wing
+        self.mesh = mesh
         self.flight_conditions = flight_conditions
 
     def run(self):
@@ -136,12 +149,26 @@ class Simulation:
         return self.distributions
 
     def plot_wing(self, **kwargs):
-        ax = plot_panels(self.wing_panels, **kwargs)
-        plot_panels(self.vortex_panels, edge_color="r", fill_color=0, ax=ax)
-        plot_control_points(self.cpoints, ax=ax)
+        """
+        Generate 3D plot of wing panels, vortex panels, and panel control points.
+        """
+        try:
+            ax = plot_panels(self.wing_panels, **kwargs)
+            plot_panels(self.vortex_panels, edge_color="r", fill_color=0, ax=ax)
+            plot_control_points(self.cpoints, ax=ax)
+        except AttributeError as e:
+            message = f"An error occurred. Make sure you have already run this simulation.\n{e}"
+            raise AttributeError(message)
 
     def plot_cl(self):
-        plot_cl_distribution_on_wing(self.wing_panels, self.distributions)
+        """
+        Plot lift coefficient distribution on the wing.
+        """
+        try:
+            plot_cl_distribution_on_wing(self.wing_panels, self.distributions)
+        except AttributeError as e:
+            message = f"An error occurred. Make sure you have already run this simulation.\n{e}"
+            raise AttributeError(message)
 
     def _build_panel(self, i, j):
         """
