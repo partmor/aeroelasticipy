@@ -8,17 +8,6 @@ from ezaero.vlm.steady import (
     WingParameters,
 )
 
-INFINITE_WING = {
-    "wing": WingParameters(
-        root_chord=1.0,
-        tip_chord=1.0,
-        planform_wingspan=10000,
-        sweep_angle=0.0,
-        dihedral_angle=0.0,
-    ),
-    "mesh": MeshParameters(m=2, n=400),
-}
-
 
 @pytest.fixture(scope="module")
 def rectangular_wing_simulation():
@@ -142,40 +131,3 @@ def test_plot_wing_can_run(rectangular_wing_simulation):
 
 def test_plot_cl_can_run(rectangular_wing_simulation):
     rectangular_wing_simulation.plot_cl()
-
-
-@pytest.mark.parametrize(
-    "angle_of_attack", np.array((-2, -1, 0, 1, 2, 5)) * np.pi / 180
-)
-def test_cl_for_infinite_wing(angle_of_attack):
-    flcond = FlightConditions(ui=50.0, aoa=angle_of_attack, rho=1.0)
-    sim = Simulation(
-        wing=INFINITE_WING["wing"],
-        mesh=INFINITE_WING["mesh"],
-        flight_conditions=flcond,
-    )
-    res = sim.run()
-
-    assert res.cl_wing == pytest.approx(2 * np.pi * angle_of_attack, rel=5e-3)
-
-
-def test_cl_slope_vs_aspect_ratio_for_slender_wing():
-    bps = [0.25, 0.5]
-    mesh = MeshParameters(8, 30)
-    alpha = np.pi / 180
-    flcond = FlightConditions(ui=100.0, aoa=alpha, rho=1.0)
-    clas = []
-    for bp in bps:
-        wing = WingParameters(
-            root_chord=1.0,
-            tip_chord=1.0,
-            planform_wingspan=bp,
-            sweep_angle=0.0,
-            dihedral_angle=0.0,
-        )
-        res = Simulation(wing=wing, mesh=mesh, flight_conditions=flcond).run()
-        clas.append(res.cl_wing / alpha)
-
-    slope = (clas[1] - clas[0]) / (bps[1] - bps[0])
-
-    assert slope == pytest.approx(np.pi / 2, abs=1e-2)
