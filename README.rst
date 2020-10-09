@@ -22,6 +22,7 @@
 .. |codecov| image:: https://img.shields.io/codecov/c/github/partmor/ezaero.svg?style=flat-square
    :target: https://codecov.io/github/partmor/ezaero?branch=master
 
+
 ezaero
 ======
 
@@ -34,11 +35,13 @@ methods for Aerodynamics, such as the 3D Vortex lattice Method for lifting surfa
    :align: center
    :width: 200px
 
+
 Documentation
 -------------
 |docs|
 
 API documentation and examples can be found on https://ezaero.readthedocs.io.
+
 
 Examples
 --------
@@ -47,22 +50,6 @@ You can check out the examples in the `gallery`_, and export them as .py scripts
 
 .. _`gallery`: https://ezaero.readthedocs.io/en/latest/auto_examples/
 
-Requirements
-------------
-ezaero has the following dependencies:
-
-* Python (>=3.6)
-* NumPy
-* matplotlib
-
-ezaero is tested on Linux, Windows and OS X on Python 3.6, 3.7 and 3.8.
-
-==============  ============  ===================
-Platform        Site          Status
-==============  ============  ===================
-Linux / OS X    Travis CI     |travisci|
-Windows x64     Appveyor      |appveyor|
-==============  ============  ===================
 
 Installation
 ------------
@@ -74,6 +61,24 @@ To install the package, simply use pip:
     $ pip install ezaero
 
 
+Requirements
+------------
+ezaero has the following dependencies:
+
+* Python (>=3.7)
+* NumPy
+* matplotlib
+
+ezaero is tested on Linux, Windows and OS X on Python 3.7 and 3.8.
+
+==============  ============  ===================
+Platform        Site          Status
+==============  ============  ===================
+Linux / OS X    Travis CI     |travisci|
+Windows x64     Appveyor      |appveyor|
+==============  ============  ===================
+
+
 Contributing
 ------------
 
@@ -81,22 +86,23 @@ All contributions and suggestions are welcome! For more details, check out `CONT
 
 .. _`CONTRIBUTING.rst`: https://github.com/partmor/ezaero/blob/master/CONTRIBUTING.rst
 
+
 Motivation
 ----------
 
-This library is a free-time project. I am using it as an excuse to:
+This library is a free-time project. I am using as a means to:
 
-1) Experiment the performance of several scientific computing packages and tools (NumPy, Numba, etc.) applied to a computation-intensive application.
-2) Learn how to properly package an open source Python library, leveraging testing with the excelent free CI tools.
-3) Redo *properly* (in terms of performance optimization, SW best practices, ...) a project I enjoyed a lot during my Master Thesis, back in 2014. I have always been curious to know how much could I improve the code performance.
+1) Experiment the performance of several scientific computing packages and tools applied to a computation-intensive application.
+2) Dive deep into the Python Open Source community.
+3) Redo *properly* (in terms of performance optimization, SW best practices, ...) a project I enjoyed a lot during my Master Thesis, back in 2014.
 
 
 My thesis covered the analysis of the aeroelastic response of an UAV in a gust scenario.
 
-My plan is to implement the following modules in order:
+My plan is to implement the following modules:
 
-+ 3D steady VLM
-+ 3D then unsteady VLM
++ 3D steady VLM [Done]
++ 3D unsteady VLM
 + Wing motion equation solver (aeroelastic response)
 
 If for some reason you run across this project, and find it useful or have suggestions,

@@ -14,7 +14,11 @@ def rectangular_wing_simulation():
     wing_params = WingParameters()
     mesh_params = MeshParameters(m=4, n=10)
     flight_cond = FlightConditions()
-    sim = Simulation(wing=wing_params, mesh=mesh_params, flight_conditions=flight_cond,)
+    sim = Simulation(
+        wing=wing_params,
+        mesh=mesh_params,
+        flight_conditions=flight_cond,
+    )
     return sim
 
 
