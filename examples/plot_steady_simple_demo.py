@@ -6,7 +6,6 @@ Minimal example of simulation execution.
 """
 import time
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 import ezaero.vlm.steady as vlm
@@ -30,9 +29,9 @@ print(f"Wing lift coefficient: {res.cl_wing}")
 print(f"Elapsed time: {time.time() - start} s")
 
 # plot wing panels, vortex panels, and collocation points
-sim.plot_wing()
-plt.show()
+wing_figure = sim.plot_wing()
+wing_figure.show()
 
 # plot cl distribution on wing
-sim.plot_cl()
-plt.show()
+cl_figure = sim.plot_cl()
+cl_figure.show()
