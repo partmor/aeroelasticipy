@@ -185,7 +185,9 @@ class Simulation:
         Plot lift coefficient distribution on the wing.
         """
         try:
-            fig = plot_cl_distribution_on_wing(self.wing_panels, self.distributions, fig=None, colorscale=None)
+            fig = plot_cl_distribution_on_wing(
+                self.wing_panels, self.distributions, fig=None, colorscale=None
+            )
         except AttributeError as e:
             message = f"An error occurred. Make sure you have already run this simulation.\n{e}"
             raise AttributeError(message)
