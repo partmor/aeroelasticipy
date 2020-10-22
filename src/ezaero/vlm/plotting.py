@@ -68,6 +68,25 @@ def plot_panel(xyz, fig=None, color="blue", limit_color="black", limit_width=2):
 
 
 def plot_panels(wing_panels, fig=None, color="blue", limit_color="black"):
+    """Returns a graphical representation for wing panels
+
+    Parameters
+    ----------
+    wing_panels: np.ndarray
+        A multidimensional matrix holding all panels boundaries positions
+    fig: ~plotly.graph_objects.figure
+        The figure used as canvas
+    color: string
+        The color for each panel
+    limit_color:
+        The color for panel boundaries
+
+    Returns
+    -------
+    fig: ~plotly.graph_objects.figure
+        The figure used as canvas
+
+    """
 
     # Check if figure available
     if not fig:
@@ -134,17 +153,19 @@ def plot_cl_distribution_on_wing(wing_panels, res, fig=None, colorscale=None):
 
     Parameters
     ----------
-    wing_panels:
-        ...
-    res:
-        ...
-    colorscale:
-        ...
+    wing_panels: np.ndarray
+        A multidimensional matrix holding all panels boundaries positions
+    res: Simulation
+        A simulation instance holding results of the analysis
+    fig: ~plotly.graph_objects.Figure
+        A figure used as canvas
+    colorscale: list
+        A list of color strings in ascendent ordergradient
 
     Returns
     -------
-    fig:
-        ...
+    fig: ~plotly.graph_objects.Figure
+        A figure used as canvas
 
     """
 
