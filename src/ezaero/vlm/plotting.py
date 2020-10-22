@@ -1,77 +1,180 @@
-import matplotlib.pyplot as plt
-import mpl_toolkits.mplot3d as a3
 import numpy as np
-from matplotlib import cm
+import plotly.graph_objects as go
+
+CL_COLORSCALE = [
+    "#e1f5fe",
+    "#b3e5fc",
+    "#81d4f4",
+    "#4fc3f7",
+    "#29b6f6",
+    "#03a9f4",
+    "#039be5",
+    "#0288d1",
+    "#0277bd",
+    "#01579b",
+]
 
 
-def plot_panels(
-    x, elev=25, azim=-160, edge_color="k", fill_color=1, transp=0.2, ax=None
-):
+def plot_panel(xyz, fig=None, color="blue", limit_color="black", limit_width=2):
+    """Returns a graphical representation for the panels
 
-    m, n = x.shape[0], x.shape[1]
-    X, Y, Z = [x[:, :, :, i] for i in range(3)]
-    bp = Y.max() - Y.min()
-    new_ax = not ax
-    if new_ax:
-        ax = a3.Axes3D(plt.figure())
+    Parameters
+    ----------
+    xyz: np.ndarray
+        An array of NxM size containing arrays of 4x3 for panel's boundaries
+    fig: ~plotly.graph_objects.figure
+        The figure used as canvas
+    color: string
+        Main color for the panel
+    limit_color: string
+        Color for representing the boundaries of the panel
+    limit_width: int
+        Controls the line width of the boundaries line
+
+    """
+
+    # Check if figure available
+    if not fig:
+        fig = go.Figure()
+        fig.update_layout(scene_aspectmode="data")
+
+    # Get the wing_panels matrix dimensions
+    # m, n = x.shape[0], x.shape[1]
+
+    # Add a trace for each panel
+    # for i in range(m):
+    # for j in range(n):
+
+    panel_surface = go.Mesh3d(
+        x=xyz[:, 0],
+        y=xyz[:, 1],
+        z=xyz[:, 2],
+        color=color,
+        showlegend=False,
+    )
+    panel_limits = go.Scatter3d(
+        x=xyz[:, 0],
+        y=xyz[:, 1],
+        z=xyz[:, 2],
+        line=dict(color=limit_color, width=limit_width),
+        marker=dict(size=2),
+        showlegend=False,
+    )
+
+    fig.add_trace(panel_surface)
+    fig.add_trace(panel_limits)
+
+    return fig
+
+
+def plot_panels(wing_panels, fig=None, color="blue", limit_color="black"):
+
+    # Check if figure available
+    if not fig:
+        fig = go.Figure()
+        fig.update_layout(scene_aspectmode="data")
+
+    # Get the wing_panels matrix dimensions
+    m, n = wing_panels.shape[0], wing_panels.shape[1]
+
+    # Add a trace for each panel
     for i in range(m):
         for j in range(n):
-            vtx = np.array([X[i, j], Y[i, j], Z[i, j]]).T
-            panel = a3.art3d.Poly3DCollection([vtx])
-            panel.set_facecolor((0, 0, fill_color, transp))
-            panel.set_edgecolor(edge_color)
-            ax.add_collection3d(panel)
-    if new_ax:
-        limits = (-bp / 1.8, bp / 1.8)
-        ax.set_xlim(limits)
-        ax.set_ylim(limits)
-        ax.set_zlim(limits)
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_zlabel("z")
-        ax.view_init(elev=elev, azim=azim)
-    return ax
+
+            # Get particular panel boundaries
+            xyz = wing_panels[i, j]
+
+            # Plot a particular panel
+            fig = plot_panel(xyz, fig=fig, color=color)
+
+    return fig
 
 
-def plot_control_points(cpoints, ax):
-    ax.scatter(
-        xs=cpoints[:, :, 0].ravel(),
-        ys=cpoints[:, :, 1].ravel(),
-        zs=cpoints[:, :, 2].ravel(),
+def plot_control_points(cpoints, fig=None, color="red", marker_size=4):
+    """Adds graphic control points graphical representation
+
+    Parameters
+    ----------
+    cpoints: np.ndarray
+        Matrix holding panels' control points
+    fig: ~plotly.graph_objects.figure
+        The figure used as canvas
+    color: string
+        Color for the collocations points
+    marker_size: int
+        Integer to represent marker size of the point
+
+    Returns
+    -------
+    fig: ~plotly.graph_objects.figure
+        The figure used as canvas
+    """
+
+    # Check if figure available
+    if not fig:
+        fig = go.Figure()
+        fig.update_layout(scene_aspectmode="data")
+
+    # Generate control points trace
+    trace_cp = go.Scatter3d(
+        x=cpoints[:, :, 0].ravel(),
+        y=cpoints[:, :, 1].ravel(),
+        z=cpoints[:, :, 2].ravel(),
+        mode="markers",
+        marker=dict(color=color, size=marker_size),
+        showlegend=False,
     )
-    return ax
+    fig.add_trace(trace_cp)
+
+    return fig
 
 
-def plot_cl_distribution_on_wing(
-    wing_panels, res, cmap=cm.coolwarm, elev=25, azim=-160
-):
-    m, n = wing_panels.shape[:2]
-    bp = wing_panels[:, :, :, 1].max() - wing_panels[:, :, :, 1].min()
+def plot_cl_distribution_on_wing(wing_panels, res, fig=None, colorscale=None):
+    """Generates a graphical representation for the lift coeffient distribution
+
+    Parameters
+    ----------
+    wing_panels:
+        ...
+    res:
+        ...
+    colorscale:
+        ...
+
+    Returns
+    -------
+    fig:
+        ...
+
+    """
+
+    # Check if figure available
+    if not fig:
+        fig = go.Figure()
+        fig.update_layout(scene_aspectmode="data")
+
+    # Unpack the lift distribution from results data
     cl_dist = res.cl
 
-    X, Y, Z = [wing_panels[:, :, :, i] for i in range(3)]
-    norm = plt.Normalize()
-    face_colors = cmap(norm(cl_dist))
-    fig = plt.figure()
-    ax = a3.Axes3D(fig)
+    # Check if colorscale available
+    if not colorscale:
+        cl_range = np.linspace(np.min(cl_dist), np.max(cl_dist), len(CL_COLORSCALE))
+
+    # Get the wing_panels matrix dimensions
+    m, n = wing_panels.shape[0], wing_panels.shape[1]
+
+    # Add a trace for each panel
     for i in range(m):
         for j in range(n):
-            vtx = np.array([X[i, j], Y[i, j], Z[i, j]]).T
-            panel = a3.art3d.Poly3DCollection([vtx])
-            panel.set_facecolor(
-                (face_colors[i, j][0], face_colors[i, j][1], face_colors[i, j][2])
-            )
-            panel.set_edgecolor("k")
-            ax.add_collection3d(panel)
-    limits = (-bp / 1.8, bp / 1.8)
-    ax.set_xlim(limits)
-    ax.set_ylim(limits)
-    ax.set_zlim(limits)
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-    ax.view_init(elev=elev, azim=azim)
-    sm = cm.ScalarMappable(norm, cmap)
-    sm.set_array(cl_dist)
-    cbar = fig.colorbar(sm, shrink=0.5, aspect=6, extend="both")
-    cbar.ax.set_xlabel(r"C$_{L_{wing}}$")
+
+            # Get particular panel boundaries
+            xyz = wing_panels[i, j]
+
+            # Solve proper color
+            color_idx = np.where(cl_range <= cl_dist[i, j])[0][-1]
+            color = CL_COLORSCALE[color_idx]
+
+            # Plot a particular panel
+            fig = plot_panel(xyz, fig=fig, color=color)
+
+    return fig
