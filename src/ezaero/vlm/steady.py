@@ -152,27 +152,45 @@ class Simulation:
         self.distributions = self._calculate_aero_distributions_from_circulation()
         return self.distributions
 
-    def plot_wing(self, **kwargs):
+    def plot_wing(
+        self,
+        fig=None,
+        color="lightgrey",
+        limit_color="black",
+        cp_color="red",
+        marker=2,
+        show_cp=True,
+    ):
         """
         Generate 3D plot of wing panels, vortex panels, and panel control points.
         """
+
         try:
-            ax = plot_panels(self.wing_panels, **kwargs)
-            plot_panels(self.vortex_panels, edge_color="r", fill_color=0, ax=ax)
-            plot_control_points(self.cpoints, ax=ax)
+            fig = plot_panels(
+                self.wing_panels, fig=fig, color=color, limit_color=limit_color
+            )
+            if show_cp:
+                fig = plot_control_points(
+                    self.cpoints, fig=fig, color=cp_color, marker_size=marker
+                )
+
         except AttributeError as e:
             message = f"An error occurred. Make sure you have already run this simulation.\n{e}"
             raise AttributeError(message)
+
+        return fig
 
     def plot_cl(self):
         """
         Plot lift coefficient distribution on the wing.
         """
         try:
-            plot_cl_distribution_on_wing(self.wing_panels, self.distributions)
+            fig = plot_cl_distribution_on_wing(self.wing_panels, self.distributions, fig=None, colorscale=None)
         except AttributeError as e:
             message = f"An error occurred. Make sure you have already run this simulation.\n{e}"
             raise AttributeError(message)
+
+        return fig
 
     def _build_panel(self, i, j):
         """
